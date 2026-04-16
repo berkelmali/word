@@ -301,9 +301,10 @@ Belgeyi indirmeden önce bir dosya adı yazmanız zorunludur. Uzantı (.docx) ot
         ),
 
         # Oluştur / İndir
-        "filename_label": "📝 Dosya Adı (uzantısız):",
-        "filename_placeholder": "Örn: Donem_Projesi_Raporu",
+        "filename_label": "📝 Dosya Adı (.docx uzantısı otomatik eklenir):",
+        "filename_placeholder": "Örn: Dönem Projesi Raporu",
         "warn_no_filename": "⚠️ Lütfen dosya adını yazın!",
+        "warn_invalid_filename": "⚠️ Dosya adında şu karakterler kullanılamaz: < > : \" / \\ | ? *",
         "btn_generate": "🚀 WORD BELGESİNİ OLUŞTUR",
         "warn_empty": "⚠️ Lütfen önce metin kutusuna bir şeyler yazın!",
         "spinner": "GOST standartlarında belgeniz hazırlanıyor, lütfen bekleyin...",
@@ -593,9 +594,10 @@ You must enter a file name before downloading. The .docx extension is added auto
             "or use the buttons above!"
         ),
 
-        "filename_label": "📝 File Name (without extension):",
-        "filename_placeholder": "E.g.: Term_Project_Report",
+        "filename_label": "📝 File Name (.docx extension is added automatically):",
+        "filename_placeholder": "E.g.: Term Project Report",
         "warn_no_filename": "⚠️ Please enter a file name!",
+        "warn_invalid_filename": "⚠️ File name cannot contain these characters: < > : \" / \\ | ? *",
         "btn_generate": "🚀 GENERATE WORD DOCUMENT",
         "warn_empty": "⚠️ Please write something in the text box first!",
         "spinner": "Your document is being prepared to GOST standards...",
@@ -888,9 +890,10 @@ You must enter a file name before downloading. The .docx extension is added auto
             "или используйте кнопки выше!"
         ),
 
-        "filename_label": "📝 Имя файла (без расширения):",
-        "filename_placeholder": "Напр.: Курсовая_Работа",
+        "filename_label": "📝 Имя файла (расширение .docx добавляется автоматически):",
+        "filename_placeholder": "Напр.: Курсовая Работа",
         "warn_no_filename": "⚠️ Пожалуйста, введите имя файла!",
+        "warn_invalid_filename": "⚠️ Имя файла не может содержать символы: < > : \" / \\ | ? *",
         "btn_generate": "🚀 СОЗДАТЬ ДОКУМЕНТ WORD",
         "warn_empty": "⚠️ Пожалуйста, сначала напишите что-нибудь в текстовом поле!",
         "spinner": "Ваш документ подготавливается по стандартам ГОСТ...",
@@ -1049,20 +1052,23 @@ file_name_input = st.text_input(
     t["filename_label"],
     value="",
     placeholder=t["filename_placeholder"],
+    help=t.get("warn_invalid_filename", ""),
 )
 
 # ── GENERATE & DOWNLOAD ────────────────────────────────────
 st.write("")
+import re as _re
+_INVALID_CHARS = _re.compile(r'[<>:"/\\|?*]')
+
 if st.button(t["btn_generate"], type="primary", use_container_width=True):
     if not file_name_input.strip():
         st.warning(t["warn_no_filename"])
+    elif _INVALID_CHARS.search(file_name_input.strip()):
+        st.warning(t["warn_invalid_filename"])
     elif not st.session_state.doc_text.strip():
         st.warning(t["warn_empty"])
     else:
-        # Sanitize filename
-        import re as _re
-        safe_name = _re.sub(r'[<>:"/\\|?*]', '_', file_name_input.strip())
-        final_filename = f"{safe_name}.docx"
+        final_filename = f"{file_name_input.strip()}.docx"
 
         lines = st.session_state.doc_text.split('\n')
 
