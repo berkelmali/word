@@ -12,98 +12,61 @@ Features:
   - Centered page numbers (Arabic, bottom), hidden on title page
   - Markdown-like heading syntax (# Heading 1, ## Heading 2, ### Heading 3)
   - Centered headings, no trailing period, bold, no indent
-  - Numbered lists (1. item) and bulleted lists (- item / • item)
+  - Native Word XML Multilevel Lists (1. / 1.1. / 1.1.1.) via numbering.xml
+  - Bulleted lists (- item / • item) and letter lists (a) item)
   - Title page support (--- TITLE --- block)
 
-Usage:
-  python belgeolusturucu.py
+Unit Conversions Used:
+  1 cm  = 567  twips   (1 inch = 1440 twips, 1 inch = 2.54 cm)
+  1 pt  = 20   half-points (for w:sz)
+
+GOST Indent Spec:
+  Level 0 (1.)      → number starts at 1.25 cm  → left=1.25cm, hanging=0.75cm → text at 1.25cm
+  Level 1 (1.1.)    → number starts at 2.50 cm  → left=2.50cm, hanging=1.00cm → text at 2.50cm
+  Level 2 (1.1.1.)  → number starts at 3.75 cm  → left=3.75cm, hanging=1.25cm → text at 3.75cm
+
+  "left" in Word XML = position where text wraps on line 2+.
+  "hanging" = how far left the number hangs from "left".
+  So number start position = left − hanging.
+
+  Level 0: left = 1.25cm (709tw), hanging = 0.75cm (425tw) → number at 0.50cm offset
+           Actually for GOST: number at margin (0cm indent), text at 1.25cm
+           → left=709, hanging=709  → number at 0cm, text at 1.25cm ✓
+
+  Level 1: left = 2.50cm (1418tw), hanging = 1.00cm (567tw) → number at 1.50cm
+           → left=1418, hanging=709 → number at 1.25cm, text at 2.50cm ✓
+
+  Level 2: left = 3.75cm (2126tw), hanging = 1.00cm (567tw) → number at 2.50cm
+           → left=2126, hanging=709 → number at 2.50cm, text at 3.75cm ✓
 """
 
 import re
 import sys
 import os
 from docx import Document
-from docx.shared import Cm, Pt, RGBColor, Inches
+from docx.shared import Cm, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_ORIENT
 from docx.oxml import OxmlElement
-from docx.oxml.ns import qn, nsdecls
-from lxml import etree
+from docx.oxml.ns import qn
 
 
 # ═══════════════════════════════════════════════════════════════
-#  LOCALIZATION
+#  LOCALIZATION (title page markers per language)
 # ═══════════════════════════════════════════════════════════════
 
 STRINGS = {
     "tr": {
-        "lang_prompt": "Dil seçin / Select language / Выберите язык (tr/en/ru): ",
-        "welcome": "═══ GOST Uyumlu Word Belgesi Oluşturucu ═══",
-        "archive_prompt": "Arşiv modu (sol kenar boşluğu 3 cm)? (e/h): ",
-        "font_size_prompt": "Font boyutu (12 / 14 / 16) [varsayılan: 14]: ",
-        "line_spacing_prompt": "Satır aralığı (1.0 / 1.2 / 1.5) [varsayılan: 1.5]: ",
-        "filename_prompt": "Dosya adı (uzantısız) [varsayılan: Formatli_Belge]: ",
-        "input_header": "Metni aşağıya yapıştırın. Biçimlendirme kuralları:",
-        "rule_heading": "  # Başlık 1  |  ## Başlık 2  |  ### Başlık 3",
-        "rule_list_1": "  1. Birinci seviye  |  1.1 İkinci seviye  |  1.1.1 Üçüncü seviye",
-        "rule_list_2": "  a) Harf listesi  |  - Madde işareti  |  • Madde işareti",
-        "rule_title": "  --- BAŞLIK --- ... --- BAŞLIK --- (Kapak sayfası bloğu)",
-        "rule_end": "Bitirmek için boş satıra BITIR / END / КОНЕЦ yazın.",
-        "separator": "─" * 56,
-        "saving": "Kaydediliyor...",
-        "success": "🎉 Belge başarıyla oluşturuldu: '{}'",
-        "end_keywords": ["BITIR", "BİTİR", "END", "КОНЕЦ"],
         "title_start": "--- BAŞLIK ---",
-        "title_end": "--- BAŞLIK ---",
-        "yes_char": "e",
-        "invalid_input": "Geçersiz giriş, varsayılan kullanılıyor.",
-        "no_content": "⚠ İçerik girilmedi, belge oluşturulmadı.",
+        "title_end":   "--- BAŞLIK ---",
     },
     "en": {
-        "lang_prompt": "Dil seçin / Select language / Выберите язык (tr/en/ru): ",
-        "welcome": "═══ GOST-Compliant Word Document Generator ═══",
-        "archive_prompt": "Archive mode (left margin 3 cm)? (y/n): ",
-        "font_size_prompt": "Font size (12 / 14 / 16) [default: 14]: ",
-        "line_spacing_prompt": "Line spacing (1.0 / 1.2 / 1.5) [default: 1.5]: ",
-        "filename_prompt": "File name (without extension) [default: Formatted_Document]: ",
-        "input_header": "Paste your text below. Formatting rules:",
-        "rule_heading": "  # Heading 1  |  ## Heading 2  |  ### Heading 3",
-        "rule_list_1": "  1. First level  |  1.1 Second level  |  1.1.1 Third level",
-        "rule_list_2": "  a) Letter list  |  - Bullet  |  • Bullet",
-        "rule_title": "  --- TITLE --- ... --- TITLE --- (Title page block)",
-        "rule_end": "Type END / BITIR / КОНЕЦ on a blank line to finish.",
-        "separator": "─" * 56,
-        "saving": "Saving...",
-        "success": "🎉 Document created successfully: '{}'",
-        "end_keywords": ["END", "BITIR", "BİTİR", "КОНЕЦ"],
         "title_start": "--- TITLE ---",
-        "title_end": "--- TITLE ---",
-        "yes_char": "y",
-        "invalid_input": "Invalid input, using default.",
-        "no_content": "⚠ No content entered, document not created.",
+        "title_end":   "--- TITLE ---",
     },
     "ru": {
-        "lang_prompt": "Dil seçin / Select language / Выберите язык (tr/en/ru): ",
-        "welcome": "═══ Генератор документов Word (ГОСТ) ═══",
-        "archive_prompt": "Архивный режим (левое поле 3 см)? (д/н): ",
-        "font_size_prompt": "Размер шрифта (12 / 14 / 16) [по умолчанию: 14]: ",
-        "line_spacing_prompt": "Межстрочный интервал (1.0 / 1.2 / 1.5) [по умолчанию: 1.5]: ",
-        "filename_prompt": "Имя файла (без расширения) [по умолчанию: Форматированный_Документ]: ",
-        "input_header": "Вставьте текст ниже. Правила форматирования:",
-        "rule_heading": "  # Заголовок 1  |  ## Заголовок 2  |  ### Заголовок 3",
-        "rule_list_1": "  1. Первый уровень  |  1.1 Второй  |  1.1.1 Третий",
-        "rule_list_2": "  а) Буквенный  |  - Маркер  |  • Маркер",
-        "rule_title": "  --- ТИТУЛ --- ... --- ТИТУЛ --- (Блок титульного листа)",
-        "rule_end": "Введите КОНЕЦ / END / BITIR на пустой строке для завершения.",
-        "separator": "─" * 56,
-        "saving": "Сохранение...",
-        "success": "🎉 Документ успешно создан: '{}'",
-        "end_keywords": ["КОНЕЦ", "END", "BITIR", "BİTİR"],
         "title_start": "--- ТИТУЛ ---",
-        "title_end": "--- ТИТУЛ ---",
-        "yes_char": "д",
-        "invalid_input": "Неверный ввод, используется значение по умолчанию.",
-        "no_content": "⚠ Содержимое не введено, документ не создан.",
+        "title_end":   "--- ТИТУЛ ---",
     },
 }
 
@@ -124,7 +87,6 @@ def add_page_number_field(run):
     fldChar_sep = OxmlElement('w:fldChar')
     fldChar_sep.set(qn('w:fldCharType'), 'separate')
 
-    # Placeholder text shown before field updates
     fldChar_text = OxmlElement('w:t')
     fldChar_text.text = "1"
 
@@ -144,7 +106,7 @@ def set_run_font(run, font_name="Times New Roman", font_size=14, bold=False):
     run.font.size = Pt(font_size)
     run.font.color.rgb = RGBColor(0, 0, 0)
     run.bold = bold
-    # Ensure Times New Roman is applied for Cyrillic/Latin via rFonts
+    # Ensure font is applied for Cyrillic/Latin via rFonts
     rPr = run._r.get_or_add_rPr()
     rFonts = OxmlElement('w:rFonts')
     rFonts.set(qn('w:ascii'), font_name)
@@ -155,9 +117,8 @@ def set_run_font(run, font_name="Times New Roman", font_size=14, bold=False):
 
 
 def suppress_page_number_on_first_page(section):
-    """Set the section so that page numbering starts but is hidden on the first page (title page)."""
+    """Set the section so that page numbering is hidden on the first page (title page)."""
     section.different_first_page_header_footer = True
-    # The first-page footer is intentionally left empty so no number appears
 
 
 def set_page_number_start(section, start=1):
@@ -169,69 +130,263 @@ def set_page_number_start(section, start=1):
 
 
 # ═══════════════════════════════════════════════════════════════
+#  NATIVE WORD MULTILEVEL LIST SETUP (numbering.xml injection)
+# ═══════════════════════════════════════════════════════════════
+
+# We use a single abstractNumId=99 as the template for all GOST multilevel lists.
+# Each time we need a fresh list sequence (e.g. "1." restarts), we create a new
+# <w:num> element pointing to abstractNumId=99 with level overrides to restart
+# counters. This makes Word's "Multilevel List" button active and the hierarchy
+# (1. → 1.1. → 1.1.1.) fully native.
+
+ABSTRACT_NUM_ID = 99
+
+def _make_rpr_for_level(font_name, font_size_pt):
+    """Create <w:rPr> for a numbering level so auto-generated numbers
+    use Times New Roman at the correct size, not the Word default Calibri."""
+    rPr = OxmlElement('w:rPr')
+    rFonts = OxmlElement('w:rFonts')
+    rFonts.set(qn('w:ascii'), font_name)
+    rFonts.set(qn('w:hAnsi'), font_name)
+    rFonts.set(qn('w:cs'), font_name)
+    rFonts.set(qn('w:eastAsia'), font_name)
+    rPr.append(rFonts)
+    sz = OxmlElement('w:sz')
+    sz.set(qn('w:val'), str(font_size_pt * 2))  # half-points
+    rPr.append(sz)
+    szCs = OxmlElement('w:szCs')
+    szCs.set(qn('w:val'), str(font_size_pt * 2))
+    rPr.append(szCs)
+    return rPr
+
+
+def setup_multilevel_numbering(doc, font_size=14):
+    """Inject the GOST multilevel abstractNum definition into the document's
+    numbering.xml. This is called once when building a document.
+
+    GOST R 7.0.97-2016 indent rules (all measured from left page margin):
+      Level 0: number at ~0cm,    text body at 1.25cm   → left=709tw,  hanging=709tw
+      Level 1: number at ~1.25cm, text body at 2.50cm   → left=1418tw, hanging=709tw
+      Level 2: number at ~2.50cm, text body at 3.75cm   → left=2126tw, hanging=709tw
+    """
+    numbering_part = doc.part.numbering_part
+    numbering_elem = numbering_part._element
+
+    # Guard: don't inject twice
+    for existing in numbering_elem.findall(qn('w:abstractNum')):
+        if existing.get(qn('w:abstractNumId')) == str(ABSTRACT_NUM_ID):
+            return
+
+    abstractNum = OxmlElement('w:abstractNum')
+    abstractNum.set(qn('w:abstractNumId'), str(ABSTRACT_NUM_ID))
+
+    multiLevelType = OxmlElement('w:multiLevelType')
+    multiLevelType.set(qn('w:val'), 'multilevel')
+    abstractNum.append(multiLevelType)
+
+    # Level definitions
+    # (ilvl, numFmt, lvlText, left_twips, hanging_twips)
+    levels = [
+        (0, 'decimal', '%1.',       709,  709),   # 1.25cm left, 1.25cm hang → num at 0
+        (1, 'decimal', '%1.%2.',    1418, 709),   # 2.50cm left, 1.25cm hang → num at 1.25cm
+        (2, 'decimal', '%1.%2.%3.', 2126, 709),   # 3.75cm left, 1.25cm hang → num at 2.50cm
+    ]
+
+    for ilvl, num_fmt, text_val, left_tw, hang_tw in levels:
+        lvl = OxmlElement('w:lvl')
+        lvl.set(qn('w:ilvl'), str(ilvl))
+
+        start = OxmlElement('w:start')
+        start.set(qn('w:val'), '1')
+        lvl.append(start)
+
+        numFmt = OxmlElement('w:numFmt')
+        numFmt.set(qn('w:val'), num_fmt)
+        lvl.append(numFmt)
+
+        lvlText = OxmlElement('w:lvlText')
+        lvlText.set(qn('w:val'), text_val)
+        lvl.append(lvlText)
+
+        lvlJc = OxmlElement('w:lvlJc')
+        lvlJc.set(qn('w:val'), 'left')
+        lvl.append(lvlJc)
+
+        # Paragraph properties for this level
+        pPr = OxmlElement('w:pPr')
+        ind = OxmlElement('w:ind')
+        ind.set(qn('w:left'), str(left_tw))
+        ind.set(qn('w:hanging'), str(hang_tw))
+        pPr.append(ind)
+        # Justify text (both = justify in Word)
+        jc = OxmlElement('w:jc')
+        jc.set(qn('w:val'), 'both')
+        pPr.append(jc)
+        lvl.append(pPr)
+
+        # Run properties so auto numbers render in Times New Roman
+        lvl.append(_make_rpr_for_level('Times New Roman', font_size))
+
+        abstractNum.append(lvl)
+
+    # Insert abstractNum BEFORE any <w:num> elements (Word spec requirement)
+    first_num = numbering_elem.find(qn('w:num'))
+    if first_num is not None:
+        numbering_elem.insert(list(numbering_elem).index(first_num), abstractNum)
+    else:
+        numbering_elem.append(abstractNum)
+
+
+def _get_next_num_id(doc):
+    """Find the highest existing numId in numbering.xml and return next available."""
+    numbering_elem = doc.part.numbering_part._element
+    max_id = 0
+    for num_el in numbering_elem.findall(qn('w:num')):
+        try:
+            nid = int(num_el.get(qn('w:numId')))
+            if nid > max_id:
+                max_id = nid
+        except (TypeError, ValueError):
+            pass
+    return max(max_id + 1, ABSTRACT_NUM_ID + 1)
+
+
+def create_new_list_instance(doc, restart_levels=None):
+    """Create a new <w:num> element referencing our abstractNum.
+
+    Args:
+        doc: The python-docx Document.
+        restart_levels: Optional set of ilvl integers to restart at 1.
+                       e.g. {0} restarts level 0 counter,
+                            {0,1,2} restarts all levels.
+
+    Returns:
+        The new numId (int).
+    """
+    numbering_elem = doc.part.numbering_part._element
+    new_id = _get_next_num_id(doc)
+
+    num = OxmlElement('w:num')
+    num.set(qn('w:numId'), str(new_id))
+
+    abstractNumId = OxmlElement('w:abstractNumId')
+    abstractNumId.set(qn('w:val'), str(ABSTRACT_NUM_ID))
+    num.append(abstractNumId)
+
+    # Add level overrides to restart specific levels
+    if restart_levels:
+        for lvl_idx in sorted(restart_levels):
+            lvlOverride = OxmlElement('w:lvlOverride')
+            lvlOverride.set(qn('w:ilvl'), str(lvl_idx))
+            startOverride = OxmlElement('w:startOverride')
+            startOverride.set(qn('w:val'), '1')
+            lvlOverride.append(startOverride)
+            num.append(lvlOverride)
+
+    numbering_elem.append(num)
+    return new_id
+
+
+def apply_list_numbering(paragraph, num_id, ilvl):
+    """Apply native Word XML numbering to a paragraph.
+
+    This sets <w:numPr> with the given numId and ilvl on the paragraph,
+    making Word treat it as part of a multilevel list.
+    """
+    pPr = paragraph._element.get_or_add_pPr()
+
+    # Remove any existing numPr first
+    existing_numPr = pPr.find(qn('w:numPr'))
+    if existing_numPr is not None:
+        pPr.remove(existing_numPr)
+
+    numPr = OxmlElement('w:numPr')
+
+    ilvl_elem = OxmlElement('w:ilvl')
+    ilvl_elem.set(qn('w:val'), str(ilvl))
+    numPr.append(ilvl_elem)
+
+    numId_elem = OxmlElement('w:numId')
+    numId_elem.set(qn('w:val'), str(num_id))
+    numPr.append(numId_elem)
+
+    pPr.append(numPr)
+
+
+# ═══════════════════════════════════════════════════════════════
 #  LINE PARSERS
 # ═══════════════════════════════════════════════════════════════
 
 HEADING_RE = re.compile(r'^(#{1,3})\s+(.+)$')
 
-# Multi-level numbering patterns (order matters — most specific first)
-# Level 3: "1.1.1" or "1.1.1)" followed by text
-NUMBERED_L3_RE = re.compile(r'^(\d+\.\d+\.\d+)[.)\s]\s*(.+)$')
-# Level 2: "1.1" or "1.1)" followed by text
-NUMBERED_L2_RE = re.compile(r'^(\d+\.\d+)[.)\s]\s*(.+)$')
-# Level 1: "1." or "1)" followed by text
+# Numbered list patterns — most specific first.
+# Each pattern captures: group(1) = the number prefix, group(2) = the text content.
+#
+# Level 3 (ilvl 2): "1.2.3." or "1.2.3 " followed by text
+NUMBERED_L3_RE = re.compile(r'^(\d+\.\d+\.\d+)\.?\s+(.+)$')
+# Level 2 (ilvl 1): "1.2." or "1.2 " followed by text
+NUMBERED_L2_RE = re.compile(r'^(\d+\.\d+)\.?\s+(.+)$')
+# Level 1 (ilvl 0): "1." or "1) " followed by text
 NUMBERED_L1_RE = re.compile(r'^(\d+)[.)]\s+(.+)$')
-# Letter numbering: "a)" / "b)" / "a." / "b." etc.
-LETTER_LIST_RE = re.compile(r'^([a-zA-Zа-яА-ЯёЁ])[.)]\s+(.+)$')
 
+LETTER_LIST_RE = re.compile(r'^([a-zA-Zа-яА-ЯёЁ])[.)]\s+(.+)$')
 BULLET_LIST_RE = re.compile(r'^[-•–]\s+(.+)$')
 
 
 def parse_line(line):
     """
-    Determine line type and return (type, content, level).
+    Determine line type and return (type, content, ilvl, number_prefix).
+
     Types: 'heading', 'numbered', 'letter', 'bullet', 'text', 'empty'
-    Level: indentation depth (1, 2, 3 for numbered; 0 for others)
+
+    For 'numbered':
+      - content = the text AFTER the number (number stripped since Word generates it)
+      - ilvl    = 0, 1, or 2 (Word XML ilvl)
+      - number_prefix = the raw numeric prefix like '1', '1.2', '1.2.3'
+
+    For 'letter':
+      - content = full original line (letter+text, since we render it manually)
+      - number_prefix = the letter character
+
+    For others:
+      - number_prefix = ''
     """
     stripped = line.strip()
 
     if not stripped:
-        return ('empty', '', 0)
+        return ('empty', '', 0, '')
 
     # Heading: # / ## / ###
     m = HEADING_RE.match(stripped)
     if m:
-        level = len(m.group(1))  # 1, 2, or 3
+        level = len(m.group(1))
         text = m.group(2).rstrip('.')  # Remove trailing period per GOST
-        return ('heading', text, level)
+        return ('heading', text, level, '')
 
-    # Multi-level numbered lists (check deepest first)
-    # Level 3: "1.1.1 text"
+    # Multi-level numbered lists (check deepest level first)
     m = NUMBERED_L3_RE.match(stripped)
     if m:
-        return ('numbered', stripped, 3)
+        return ('numbered', m.group(2), 2, m.group(1))  # ilvl=2
 
-    # Level 2: "1.1 text" or "2.1 text"
     m = NUMBERED_L2_RE.match(stripped)
     if m:
-        return ('numbered', stripped, 2)
+        return ('numbered', m.group(2), 1, m.group(1))  # ilvl=1
 
-    # Level 1: "1. text" or "1) text"
     m = NUMBERED_L1_RE.match(stripped)
     if m:
-        return ('numbered', stripped, 1)
+        return ('numbered', m.group(2), 0, m.group(1))  # ilvl=0
 
     # Letter list: "a) text" or "б. text"
     m = LETTER_LIST_RE.match(stripped)
     if m:
-        return ('letter', stripped, 0)
+        return ('letter', stripped, 0, m.group(1))
 
     # Bulleted list: "- text" or "• text" or "– text"
     m = BULLET_LIST_RE.match(stripped)
     if m:
-        return ('bullet', m.group(1), 0)
+        return ('bullet', m.group(1), 0, '')
 
-    return ('text', stripped, 0)
+    return ('text', stripped, 0, '')
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -241,7 +396,11 @@ def parse_line(line):
 def build_document(lines, *, archive_mode=False, font_size=14, line_spacing=1.5, lang="tr"):
     """Build and return a python-docx Document from parsed lines."""
     doc = Document()
-    s = STRINGS[lang]
+
+    # ── Initialize multilevel numbering XML ─────────────────
+    setup_multilevel_numbering(doc, font_size=font_size)
+
+    s = STRINGS.get(lang, STRINGS["tr"])
 
     # ── Section: A4 Portrait with GOST margins ──────────────
     section = doc.sections[0]
@@ -307,7 +466,6 @@ def build_document(lines, *, archive_mode=False, font_size=14, line_spacing=1.5,
         # Hide page number on title page
         suppress_page_number_on_first_page(section)
 
-        # Center title content vertically by adding spacing
         for i, tl in enumerate(title_lines):
             stripped = tl.strip()
             if not stripped:
@@ -333,64 +491,92 @@ def build_document(lines, *, archive_mode=False, font_size=14, line_spacing=1.5,
     set_run_font(footer_run, font_size=font_size)
     add_page_number_field(footer_run)
 
-    # ── Indentation per numbering level ──────────────────────
-    # Level 1: standard 1.25cm indent | Level 2: +1.25cm | Level 3: +2.5cm
-    LIST_INDENT = {
-        1: Cm(1.25),   # "1. text"  — first level
-        2: Cm(2.50),   # "1.1 text" — second level
-        3: Cm(3.75),   # "1.1.1 text" — third level
-    }
+    # ── State tracking for numbered lists ───────────────────
+    # current_num_id:  The active <w:num> numId. None = not in a list.
+    # We create a new num instance when:
+    #   1. First numbered line after non-list content (current_num_id is None)
+    #   2. A level-0 line has number_prefix "1" (explicit restart)
+    current_num_id = None
 
     # ── Process body lines ──────────────────────────────────
     for line in body_lines:
-        line_type, content, level = parse_line(line)
+        line_type, content, ilvl, num_prefix = parse_line(line)
 
         if line_type == 'empty':
-            # Preserve paragraph breaks (empty line = visual separator)
             continue
 
         elif line_type == 'heading':
+            # Headings break list context
+            current_num_id = None
+
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p.paragraph_format.first_line_indent = Cm(0)
             p.paragraph_format.space_before = Pt(12)
             p.paragraph_format.space_after = Pt(6)
             run = p.add_run(content)
-            # Heading level styling
-            if level == 1:
+            if ilvl == 1:  # heading level stored in ilvl for headings
                 set_run_font(run, font_size=font_size, bold=True)
                 run.font.all_caps = True
-            elif level == 2:
+            elif ilvl == 2:
                 set_run_font(run, font_size=font_size, bold=True)
             else:
                 set_run_font(run, font_size=font_size, bold=True)
 
         elif line_type == 'numbered':
-            indent = LIST_INDENT.get(level, Cm(1.25))
+            # Decide whether to create a new list instance
+            need_new_list = False
+
+            if current_num_id is None:
+                # First numbered item after non-list content
+                need_new_list = True
+            elif ilvl == 0 and num_prefix == '1':
+                # Explicit restart: user typed "1. ..." at level 0
+                need_new_list = True
+
+            if need_new_list:
+                # Restart all three levels
+                current_num_id = create_new_list_instance(doc, restart_levels={0, 1, 2})
+
             p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+            # Clear the Normal style's first-line indent (numbering XML handles indents)
             p.paragraph_format.first_line_indent = Cm(0)
-            p.paragraph_format.left_indent = indent
+            p.paragraph_format.left_indent = None
+            p.paragraph_format.line_spacing = line_spacing
+
+            # Apply native XML numbering
+            apply_list_numbering(p, current_num_id, ilvl)
+
             run = p.add_run(content)
             set_run_font(run, font_size=font_size)
 
         elif line_type == 'letter':
+            # Letter lists are rendered manually (not native numbering)
+            current_num_id = None
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p.paragraph_format.first_line_indent = Cm(0)
-            p.paragraph_format.left_indent = Cm(2.50)  # Same as level 2
+            p.paragraph_format.left_indent = Cm(2.50)
+            # Hanging indent via negative first-line
+            p.paragraph_format.first_line_indent = Cm(-0.75)
             run = p.add_run(content)
             set_run_font(run, font_size=font_size)
 
         elif line_type == 'bullet':
+            # Bullets rendered manually with em-dash per GOST
+            current_num_id = None
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p.paragraph_format.first_line_indent = Cm(0)
             p.paragraph_format.left_indent = Cm(1.25)
+            p.paragraph_format.first_line_indent = Cm(-0.50)
             run = p.add_run(f"– {content}")  # GOST uses em-dash for bullets
             set_run_font(run, font_size=font_size)
 
         else:  # 'text'
+            # Normal paragraphs break list context
+            current_num_id = None
             p = doc.add_paragraph()
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
             p.paragraph_format.first_line_indent = Cm(1.25)
@@ -399,121 +585,3 @@ def build_document(lines, *, archive_mode=False, font_size=14, line_spacing=1.5,
             set_run_font(run, font_size=font_size)
 
     return doc
-
-
-# ═══════════════════════════════════════════════════════════════
-#  INTERACTIVE MENU
-# ═══════════════════════════════════════════════════════════════
-
-def choose_language():
-    """Prompt for language selection."""
-    while True:
-        choice = input("Dil seçin / Select language / Выберите язык (tr/en/ru): ").strip().lower()
-        if choice in STRINGS:
-            return choice
-        print("→ tr / en / ru")
-
-
-def get_yes_no(prompt, yes_char):
-    """Return True if user answers yes."""
-    answer = input(prompt).strip().lower()
-    return answer == yes_char
-
-
-def get_choice(prompt, valid, default, s):
-    """Return a validated numeric choice or default."""
-    raw = input(prompt).strip()
-    if not raw:
-        return default
-    try:
-        val = type(default)(raw)
-        if val in valid:
-            return val
-    except (ValueError, TypeError):
-        pass
-    print(f"  {s['invalid_input']}")
-    return default
-
-
-def main():
-    """Main entry point — interactive document creation."""
-    # ── Language ────────────────────────────────────────────
-    lang = choose_language()
-    s = STRINGS[lang]
-
-    print()
-    print(s["welcome"])
-    print(s["separator"])
-
-    # ── Configuration ───────────────────────────────────────
-    archive_mode = get_yes_no(s["archive_prompt"], s["yes_char"])
-
-    font_size = get_choice(
-        s["font_size_prompt"],
-        valid=[12, 14, 16],
-        default=14,
-        s=s
-    )
-
-    line_spacing = get_choice(
-        s["line_spacing_prompt"],
-        valid=[1.0, 1.2, 1.5],
-        default=1.5,
-        s=s
-    )
-
-    # ── Default filenames per language ──────────────────────
-    default_names = {"tr": "Formatli_Belge", "en": "Formatted_Document", "ru": "Форматированный_Документ"}
-    filename_raw = input(s["filename_prompt"]).strip()
-    filename = filename_raw if filename_raw else default_names[lang]
-    # Sanitize filename
-    filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-
-    print()
-    print(s["separator"])
-    print(s["input_header"])
-    print(s["rule_heading"])
-    print(s["rule_list_1"])
-    print(s["rule_list_2"])
-    print(s["rule_title"])
-    print(s["rule_end"])
-    print(s["separator"])
-    print()
-
-    # ── Text input ──────────────────────────────────────────
-    end_keywords = {kw.upper() for kw in s["end_keywords"]}
-    lines = []
-    while True:
-        try:
-            line = input()
-        except EOFError:
-            break
-        if line.strip().upper() in end_keywords:
-            break
-        lines.append(line)
-
-    if not any(l.strip() for l in lines):
-        print(s["no_content"])
-        return
-
-    # ── Build & save ────────────────────────────────────────
-    print()
-    print(s["saving"])
-
-    doc = build_document(
-        lines,
-        archive_mode=archive_mode,
-        font_size=font_size,
-        line_spacing=line_spacing,
-        lang=lang,
-    )
-
-    output_path = os.path.join(os.getcwd(), f"{filename}.docx")
-    doc.save(output_path)
-
-    print(s["separator"])
-    print(s["success"].format(output_path))
-
-
-if __name__ == "__main__":
-    main()
