@@ -101,6 +101,11 @@ Kapak sayfasında sayfa numarası otomatik olarak **gizlenir**.
 - ↕️ Seçtiğiniz satır aralığı (1.0 / 1.2 / 1.5)
 - 🔢 Sayfa numarası: Alt orta, Arap rakamları, noktasız
 - ✏️ Paragraf girintisi: 1,25 cm (ilk satır)
+
+---
+
+**📝 Dosya Adı**
+Belgeyi indirmeden önce bir dosya adı yazmanız zorunludur. Uzantı (.docx) otomatik eklenir.
 """,
 
         # Ana sayfa — Rehber (expander)
@@ -113,7 +118,7 @@ Kapak sayfasında sayfa numarası otomatik olarak **gizlenir**.
 2️⃣ **Metin kutusuna** yazınızı yazın. Başlık için `#`, liste için `1.` kullanın.
    - Emin değilseniz **💡 Örnek Şablon Yükle** butonuna basarak hazır bir örnek yükleyin.
 
-3️⃣ **🚀 Oluştur** butonuna basın, ardından **📥 İndir** ile dosyanızı alın.
+3️⃣ **Dosya adını** yazın (zorunlu) ve **🚀 Oluştur** butonuna basın, ardından **📥 İndir** ile dosyanızı alın.
 
 > 💡 **İpucu:** Metin kutusunun üstündeki renkli butonları kullanarak başlık, liste ve kapak sayfası şablonlarını tek tıkla ekleyebilirsiniz!
 """,
@@ -158,7 +163,7 @@ Kapak sayfasında sayfa numarası otomatik olarak **gizlenir**.
             "GOST R 7.0.97-2016 STANDARTLARI TEST VE KULLANIM KILAVUZU\n"
             "KAPSAMLI DÖNEM PROJESİ RAPORU\n"
             "\n"
-            "Hazırlayan: Ad Soyad\n"
+            "Hazırlayan: Berk Elmalı\n"
             "Lefkoşa - 2026\n"
             "--- BAŞLIK ---\n"
             "\n"
@@ -281,7 +286,7 @@ Kapak sayfasında sayfa numarası otomatik olarak **gizlenir**.
             "\n"
             "PROJE ADI\n"
             "\n"
-            "Ad Soyad\n"
+            "Berk Elmalı\n"
             "Lefkoşa - 2026\n"
             "--- BAŞLIK ---\n"
         ),
@@ -296,6 +301,9 @@ Kapak sayfasında sayfa numarası otomatik olarak **gizlenir**.
         ),
 
         # Oluştur / İndir
+        "filename_label": "📝 Dosya Adı (uzantısız):",
+        "filename_placeholder": "Örn: Donem_Projesi_Raporu",
+        "warn_no_filename": "⚠️ Lütfen dosya adını yazın!",
         "btn_generate": "🚀 WORD BELGESİNİ OLUŞTUR",
         "warn_empty": "⚠️ Lütfen önce metin kutusuna bir şeyler yazın!",
         "spinner": "GOST standartlarında belgeniz hazırlanıyor, lütfen bekleyin...",
@@ -396,6 +404,11 @@ Page numbers are automatically **hidden** on the title page.
 - ↕️ Your chosen line spacing (1.0 / 1.2 / 1.5)
 - 🔢 Page numbers: Bottom center, Arabic numerals, no period
 - ✏️ Paragraph indent: 1.25 cm (first line)
+
+---
+
+**📝 File Name**
+You must enter a file name before downloading. The .docx extension is added automatically.
 """,
 
         "guide_expander": "📖 Quick Start (Click to Expand)",
@@ -407,7 +420,7 @@ Page numbers are automatically **hidden** on the title page.
 2️⃣ **Text box:** Write your text. Use `#` for headings, `1.` for lists.
    - Not sure? Click **💡 Load Template** to see a working example.
 
-3️⃣ Click **🚀 Generate**, then **📥 Download** your file.
+3️⃣ **Type a file name** (required), click **🚀 Generate**, then **📥 Download** your file.
 
 > 💡 **Tip:** Use the colorful buttons above the text box to insert headings, lists, and title pages with one click!
 """,
@@ -446,7 +459,7 @@ Page numbers are automatically **hidden** on the title page.
             "GOST R 7.0.97-2016 STANDARDS TEST AND USER GUIDE\n"
             "COMPREHENSIVE TERM PROJECT REPORT\n"
             "\n"
-            "Prepared by: John Doe\n"
+            "Prepared by: Berk Elmalı\n"
             "Nicosia - 2026\n"
             "--- TITLE ---\n"
             "\n"
@@ -567,7 +580,7 @@ Page numbers are automatically **hidden** on the title page.
             "\n"
             "PROJECT TITLE\n"
             "\n"
-            "Your Name\n"
+            "Berk Elmalı\n"
             "Nicosia - 2026\n"
             "--- TITLE ---\n"
         ),
@@ -580,6 +593,9 @@ Page numbers are automatically **hidden** on the title page.
             "or use the buttons above!"
         ),
 
+        "filename_label": "📝 File Name (without extension):",
+        "filename_placeholder": "E.g.: Term_Project_Report",
+        "warn_no_filename": "⚠️ Please enter a file name!",
         "btn_generate": "🚀 GENERATE WORD DOCUMENT",
         "warn_empty": "⚠️ Please write something in the text box first!",
         "spinner": "Your document is being prepared to GOST standards...",
@@ -679,6 +695,11 @@ Page numbers are automatically **hidden** on the title page.
 - ↕️ Выбранный межстрочный интервал (1.0 / 1.2 / 1.5)
 - 🔢 Номера страниц: Внизу по центру, арабские цифры, без точки
 - ✏️ Отступ абзаца: 1,25 см (первая строка)
+
+---
+
+**📝 Имя файла**
+Перед загрузкой необходимо указать имя файла. Расширение .docx добавляется автоматически.
 """,
 
         "guide_expander": "📖 Быстрый старт (нажмите, чтобы открыть)",
@@ -690,7 +711,7 @@ Page numbers are automatically **hidden** on the title page.
 2️⃣ **Текстовое поле:** напишите текст. Используйте `#` для заголовков, `1.` для списков.
    - Не уверены? Нажмите **💡 Загрузить шаблон**, чтобы увидеть рабочий пример.
 
-3️⃣ Нажмите **🚀 Создать**, затем **📥 Скачать**.
+3️⃣ **Введите имя файла** (обязательно), нажмите **🚀 Создать**, затем **📥 Скачать**.
 
 > 💡 **Совет:** Используйте кнопки над текстовым полем для быстрой вставки заголовков, списков и титульных листов!
 """,
@@ -729,7 +750,7 @@ Page numbers are automatically **hidden** on the title page.
             "ТЕСТОВОЕ И РУКОВОДСТВО ПО СТАНДАРТАМ ГОСТ Р 7.0.97-2016\n"
             "КОМПЛЕКСНЫЙ ОТЧЕТ ПО КУРСОВОМУ ПРОЕКТУ\n"
             "\n"
-            "Выполнил: Иван Иванов\n"
+            "Выполнил: Berk Elmalı\n"
             "Никосия - 2026\n"
             "--- ТИТУЛ ---\n"
             "\n"
@@ -854,7 +875,7 @@ Page numbers are automatically **hidden** on the title page.
             "\n"
             "НАЗВАНИЕ РАБОТЫ\n"
             "\n"
-            "Имя Фамилия\n"
+            "Berk Elmalı\n"
             "Никосия - 2026\n"
             "--- ТИТУЛ ---\n"
         ),
@@ -867,6 +888,9 @@ Page numbers are automatically **hidden** on the title page.
             "или используйте кнопки выше!"
         ),
 
+        "filename_label": "📝 Имя файла (без расширения):",
+        "filename_placeholder": "Напр.: Курсовая_Работа",
+        "warn_no_filename": "⚠️ Пожалуйста, введите имя файла!",
         "btn_generate": "🚀 СОЗДАТЬ ДОКУМЕНТ WORD",
         "warn_empty": "⚠️ Пожалуйста, сначала напишите что-нибудь в текстовом поле!",
         "spinner": "Ваш документ подготавливается по стандартам ГОСТ...",
@@ -1019,12 +1043,27 @@ text_input = st.text_area(
 )
 
 
+# ── FILE NAME INPUT ─────────────────────────────────────────
+st.write("")
+file_name_input = st.text_input(
+    t["filename_label"],
+    value="",
+    placeholder=t["filename_placeholder"],
+)
+
 # ── GENERATE & DOWNLOAD ────────────────────────────────────
 st.write("")
 if st.button(t["btn_generate"], type="primary", use_container_width=True):
-    if not st.session_state.doc_text.strip():
+    if not file_name_input.strip():
+        st.warning(t["warn_no_filename"])
+    elif not st.session_state.doc_text.strip():
         st.warning(t["warn_empty"])
     else:
+        # Sanitize filename
+        import re as _re
+        safe_name = _re.sub(r'[<>:"/\\|?*]', '_', file_name_input.strip())
+        final_filename = f"{safe_name}.docx"
+
         lines = st.session_state.doc_text.split('\n')
 
         with st.spinner(t["spinner"]):
@@ -1045,7 +1084,7 @@ if st.button(t["btn_generate"], type="primary", use_container_width=True):
                 st.download_button(
                     label=t["btn_download"],
                     data=bio.getvalue(),
-                    file_name=t["download_name"],
+                    file_name=final_filename,
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                     use_container_width=True,
                 )
