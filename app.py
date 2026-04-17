@@ -3,6 +3,200 @@ import io
 from belgeolusturucu import build_document
 
 # ═══════════════════════════════════════════════════════════════
+#  PREMIUM DARK THEME CSS INJECTION
+# ═══════════════════════════════════════════════════════════════
+CUSTOM_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Global Typography & Background */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.stApp {
+    background-color: #0D1117 !important;
+    color: #c9d1d9 !important;
+}
+
+/* Sidebar Glassmorphism */
+[data-testid="stSidebar"] {
+    background-color: #161B22 !important;
+    border-right: 1px solid #30363d !important;
+}
+[data-testid="stSidebar"] * {
+    color: #c9d1d9 !important;
+}
+
+/* Base Pill Buttons (Toolbar) */
+.stButton > button {
+    border-radius: 20px !important;
+    background-color: #21262d !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+    transition: all 0.2s ease-in-out !important;
+    font-weight: 500 !important;
+}
+.stButton > button:hover {
+    border-color: #8b949e !important;
+    background-color: #30363d !important;
+    transform: translateY(-1px);
+}
+
+/* Primary Button (Generate) - Electric Blue Gradient CTA */
+.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #2F81F7 0%, #1f6feb 100%) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    padding: 10px 24px !important;
+    box-shadow: 0 4px 14px rgba(47, 129, 247, 0.3) !important;
+}
+.stButton > button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #4a93f8 0%, #2F81F7 100%) !important;
+    box-shadow: 0 6px 20px rgba(47, 129, 247, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+/* Download Button - Distinct Green Success */
+.stDownloadButton > button {
+    background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    border: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(35, 134, 54, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+.stDownloadButton > button:hover {
+    background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%) !important;
+    box-shadow: 0 6px 20px rgba(35, 134, 54, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+/* Text Area (Document Editor Feel) */
+.stTextArea textarea {
+    background-color: #010409 !important;
+    color: #e6edf3 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    font-family: 'Consolas', 'Courier New', monospace !important;
+    padding: 16px !important;
+    line-height: 1.6 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.stTextArea textarea:focus {
+    border-color: #2F81F7 !important;
+    box-shadow: 0 0 0 3px rgba(47, 129, 247, 0.3) !important;
+}
+
+/* Text Input (File Name) */
+.stTextInput input {
+    background-color: #010409 !important;
+    color: #e6edf3 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.stTextInput input:focus {
+    border-color: #F0A500 !important;
+    box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.25) !important;
+}
+
+/* Expander Cards (Glassmorphism) */
+[data-testid="stExpander"] {
+    background-color: rgba(22, 27, 34, 0.6) !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px);
+}
+[data-testid="stExpander"] summary {
+    background-color: transparent !important;
+}
+
+/* Titles and Headers */
+h1, h2, h3 {
+    color: #e6edf3 !important;
+    font-weight: 600 !important;
+}
+
+/* Subtle Animated Accent Line under Main Title */
+h1:after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #2F81F7, #F0A500);
+    margin-top: 12px;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+h1:hover:after {
+    width: 120px;
+}
+
+/* Inputs & Selectboxes */
+.stSelectbox div[data-baseweb="select"] > div {
+    background-color: #0d1117 !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+    border-radius: 6px !important;
+}
+
+/* Labels */
+label, .stCheckbox span {
+    color: #c9d1d9 !important;
+}
+
+/* Markdown body text */
+.stMarkdown p, .stMarkdown li {
+    color: #c9d1d9 !important;
+}
+
+/* Horizontal rule */
+hr {
+    border-color: #30363d !important;
+}
+
+/* Tables in markdown */
+.stMarkdown table {
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+.stMarkdown th {
+    background-color: #161B22 !important;
+    color: #e6edf3 !important;
+}
+.stMarkdown td {
+    background-color: #0d1117 !important;
+    border-color: #30363d !important;
+}
+
+/* Success / Warning / Error banners */
+.stAlert {
+    border-radius: 8px !important;
+}
+
+/* Scrollbar (Webkit) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #8b949e;
+}
+</style>
+"""
+
+# ═══════════════════════════════════════════════════════════════
 #  ÇOKLU DİL DESTEĞİ (LOCALIZATION) — TR / EN / RU
 # ═══════════════════════════════════════════════════════════════
 
@@ -163,7 +357,7 @@ Belgeyi indirmeden önce bir dosya adı yazmanız zorunludur. Uzantı (.docx) ot
             "GOST R 7.0.97-2016 STANDARTLARI TEST VE KULLANIM KILAVUZU\n"
             "KAPSAMLI DÖNEM PROJESİ RAPORU\n"
             "\n"
-            "Hazırlayan: Berk Elmalı\n"
+            "Hazırlayan: Ad Soyad\n"
             "Lefkoşa - 2026\n"
             "--- BAŞLIK ---\n"
             "\n"
@@ -286,7 +480,7 @@ Belgeyi indirmeden önce bir dosya adı yazmanız zorunludur. Uzantı (.docx) ot
             "\n"
             "PROJE ADI\n"
             "\n"
-            "Berk Elmalı\n"
+            "Ad Soyad\n"
             "Lefkoşa - 2026\n"
             "--- BAŞLIK ---\n"
         ),
@@ -460,7 +654,7 @@ You must enter a file name before downloading. The .docx extension is added auto
             "GOST R 7.0.97-2016 STANDARDS TEST AND USER GUIDE\n"
             "COMPREHENSIVE TERM PROJECT REPORT\n"
             "\n"
-            "Prepared by: Berk Elmalı\n"
+            "Prepared by: John Doe\n"
             "Nicosia - 2026\n"
             "--- TITLE ---\n"
             "\n"
@@ -581,7 +775,7 @@ You must enter a file name before downloading. The .docx extension is added auto
             "\n"
             "PROJECT TITLE\n"
             "\n"
-            "Berk Elmalı\n"
+            "Your Name\n"
             "Nicosia - 2026\n"
             "--- TITLE ---\n"
         ),
@@ -752,7 +946,7 @@ You must enter a file name before downloading. The .docx extension is added auto
             "ТЕСТОВОЕ И РУКОВОДСТВО ПО СТАНДАРТАМ ГОСТ Р 7.0.97-2016\n"
             "КОМПЛЕКСНЫЙ ОТЧЕТ ПО КУРСОВОМУ ПРОЕКТУ\n"
             "\n"
-            "Выполнил: Berk Elmalı\n"
+            "Выполнил: Иван Иванов\n"
             "Никосия - 2026\n"
             "--- ТИТУЛ ---\n"
             "\n"
@@ -877,7 +1071,7 @@ You must enter a file name before downloading. The .docx extension is added auto
             "\n"
             "НАЗВАНИЕ РАБОТЫ\n"
             "\n"
-            "Berk Elmalı\n"
+            "Имя Фамилия\n"
             "Никосия - 2026\n"
             "--- ТИТУЛ ---\n"
         ),
@@ -934,7 +1128,7 @@ def clear_text():
 
 
 # ═══════════════════════════════════════════════════════════════
-#  PAGE CONFIG & LANGUAGE SELECTOR
+#  PAGE CONFIG, CSS INJECTION & LANGUAGE SELECTOR
 # ═══════════════════════════════════════════════════════════════
 
 st.set_page_config(
@@ -942,6 +1136,9 @@ st.set_page_config(
     page_icon="📄",
     layout="wide",
 )
+
+# ── PREMIUM CSS ENJEKSİYONU ──
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 lang_options = {"Türkçe (TR)": "tr", "English (EN)": "en", "Русский (RU)": "ru"}
 lang_reverse = {v: k for k, v in lang_options.items()}
